@@ -54,6 +54,7 @@
     <Compile Include="IDeleteableObject.cs" />
     <Compile Include="SQL\Utility\SqlConnectionInformation.cs" />
     <Compile Include="SQL\Utility\SqlConnectionBehavior.cs" />
+    <Compile Include="SQL\Utility\NewObjectSqlWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

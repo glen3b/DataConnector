@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL.Utility
 {
+	[Obsolete("MSDN documentation states that a SqlConnection that has been garbage collected will not automatically close, and in addition changes to the API render this class useless as client code closes its own connections.")]
     public class ReferenceTrackingSqlWrapper : SqlWrapper
     {
         public ReferenceTrackingSqlWrapper(string connString) : base(connString) { }
