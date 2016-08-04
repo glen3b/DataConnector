@@ -9,13 +9,6 @@ namespace DataConnector
     public interface IDataBackend<in TBaseObject> : IDisposable where TBaseObject : IDataObject  
     {
         /// <summary>
-        /// Loads data into the given object from the data backend.
-        /// </summary>
-        /// <param name="target">The object to load data into, which is initialized with an identifier.</param>
-        [Obsolete("Please use GetObjectByID instead.")]
-        void LoadObject(TBaseObject target);
-
-		/// <summary>
 		/// Saves the given object into the data backend.
 		/// </summary>
 		/// <param name="target">The object to save.</param>

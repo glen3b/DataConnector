@@ -182,16 +182,6 @@ namespace DataConnector.SQL
 
         }
 
-        public void LoadObject(SqlDataObject target)
-        {
-            if (!(target is SqlDataObject))
-            {
-                throw new ArgumentException("The SqlDataBackend cannot load objects unless they extend SqlDataObject.");
-            }
-
-            GenericRead(target as SqlDataObject);
-        }
-
         public void SaveObject(SqlDataObject target)
         {
             if (!(target is SqlDataObject))
