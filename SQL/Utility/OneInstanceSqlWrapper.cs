@@ -21,16 +21,17 @@ namespace DataConnector.SQL.Utility
         }
 
         private SqlConnection _connection;
+		private SqlConnectionInformation _info;
 
-        public override SqlConnection GetConnection()
+		public override SqlConnectionInformation GetConnection()
         {
             if (_connection == null)
             {
                 _connection = new SqlConnection(ConnectionString);
-                _connection.Open();
+				_info = new SqlConnectionInformation (_connection, SqlConnectionBehavior.KeepOpen);
             }
 
-            return _connection;
+			return _info;
         }
     }
 }

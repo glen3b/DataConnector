@@ -30,14 +30,13 @@ namespace DataConnector.SQL.Utility
             }
         }
 
-        public override SqlConnection GetConnection()
+		public override SqlConnectionInformation GetConnection()
         {
             SqlConnection newConn = new SqlConnection(ConnectionString);
-            newConn.Open();
             WeakReference<SqlConnection> connRef = new WeakReference<SqlConnection>(newConn);
             OpenConnections.Add(connRef);
 
-            return newConn;
+			return new SqlConnectionInformation(newConn, SqlConnectionBehavior.Default);
         }
     }
 }
