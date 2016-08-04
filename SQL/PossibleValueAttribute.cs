@@ -10,7 +10,7 @@ namespace DataConnector.SQL
     /// An attribute denoting a possible value of a type. Intended as a hardcoded alternative to a SqlSelectAllAttribute.
     /// </summary>
     [System.AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = true)]
-    sealed class PossibleValueAttribute : Attribute
+    public sealed class PossibleValueAttribute : Attribute
     {
         // See the attribute guidelines at 
         //  http://go.microsoft.com/fwlink/?LinkId=85236

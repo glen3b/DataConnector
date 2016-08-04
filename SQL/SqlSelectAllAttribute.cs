@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DataConnector.SQL
 {
     [System.AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
-    sealed class SqlSelectAllAttribute : Attribute
+    public sealed class SqlSelectAllAttribute : Attribute
     {
         // See the attribute guidelines at 
         //  http://go.microsoft.com/fwlink/?LinkId=85236
