@@ -2,7 +2,7 @@
 using DataConnector.SQL.Utility;
 using System.Data.SqlClient;
 
-namespace DataConnector
+namespace DataConnector.SQL.Utility
 {
 	/// <summary>
 	/// A SQL wrapper that creates new connections for each call.

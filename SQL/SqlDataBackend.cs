@@ -23,6 +23,14 @@ namespace DataConnector.SQL
             _database = databaseWrapper;
         }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DataConnector.SQL.SqlDataBackend"/> class, using a backend wrapper of type <see cref="DataConnector.SQL.Utility.NewObjectSqlWrapper"/>.
+		/// </summary>
+		/// <param name="connectionString">The connection string to initialize the backend wrapper with.</param>
+		public SqlDataBackend(string connectionString) : this(new NewObjectSqlWrapper(connectionString)) {
+
+		}
+
 
         public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
             where TParentObject : SqlDataObject

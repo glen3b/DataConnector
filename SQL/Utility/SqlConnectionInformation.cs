@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.SqlClient;
 
-namespace DataConnector
+namespace DataConnector.SQL.Utility
 {
 	/// <summary>
 	/// A structure containing a SqlConnection and information about the proper behavior of client code in usage of that connection.

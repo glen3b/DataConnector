@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DataConnector
+namespace DataConnector.SQL.Utility
 {
 	[Flags]
 	public enum SqlConnectionBehavior : uint
