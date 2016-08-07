@@ -295,7 +295,7 @@ namespace DataConnector.SQL
 				object dataInstance = data[sqlFieldAttribute.SQLFieldName];
 
 				ForeignKeyAttribute fkey = null;
-				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute))) != null) {
+				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null) {
 					if (fkey.ForeignType == field.FieldType) {
 						// Get the object by ID and use that to set the field
 						// We have to use reflection to invoke a generic method with a type only known at runtime
