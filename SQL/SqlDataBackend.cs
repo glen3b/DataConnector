@@ -41,7 +41,7 @@ namespace DataConnector.SQL
                 throw new ArgumentNullException("parent");
             }
 
-            OneToManyRelationshipAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(OneToManyRelationshipAttribute)) as OneToManyRelationshipAttribute;
+			SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
             if (parentAttribute == null)
             {
                 // Per interface spec

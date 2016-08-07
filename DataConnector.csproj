@@ -37,7 +37,7 @@
   <ItemGroup>
     <Compile Include="IDataBackend.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SQL\OneToManyRelationshipAttribute.cs" />
+    <Compile Include="SQL\SqlRelationshipOneToManyAttribute.cs" />
     <Compile Include="SQL\PossibleValueAttribute.cs" />
     <Compile Include="SQL\PrimaryKeyAttribute.cs" />
     <Compile Include="SQL\SqlBackedClassAttribute.cs" />

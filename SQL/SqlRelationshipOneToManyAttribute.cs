@@ -3,7 +3,7 @@
 namespace DataConnector.SQL
 {
 	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
-	public sealed class OneToManyRelationshipAttribute : Attribute
+	public sealed class SqlRelationshipOneToManyAttribute : Attribute
 	{
 		readonly Type childType;
 
@@ -27,7 +27,7 @@ namespace DataConnector.SQL
 		/// </summary>
 		public string GetChildrenProcedure { get; set; }
 
-		public OneToManyRelationshipAttribute (Type childType)
+		public SqlRelationshipOneToManyAttribute (Type childType)
 		{
 			this.childType = childType;
 		}
