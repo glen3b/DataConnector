@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using System.Data;
 
 namespace DataConnector.JSON
 {
@@ -170,9 +171,14 @@ namespace DataConnector.JSON
 				result = AllObjects [typeof(TObject).FullName] [id];
 			} catch {
 				// TODO fancy foreign keys (those that have a composite type as opposed to an ID) may cause a StackOverflowException here
+				// TODO may return out of date objects if backend is concurrent (however we set the dictionary before we save)
 				LoadBackend ();
 
-				result = AllObjects [typeof(TObject).FullName] [id];
+				try {
+					result = AllObjects [typeof(TObject).FullName] [id];
+				} catch (Exception ex){
+					throw new RowNotInTableException ("The given ID does not correspond to a record.", ex);
+				}
 			}
 
 			return (TObject)result;

@@ -389,10 +389,11 @@ namespace DataConnector.SQL
             // Run the actual update
             DataTable results = _database.RunProcedure(dataManagementAttribute.GetByIdProcedureName, idParameter);
 
-            if (results.Rows.Count != 1)
-            {
-                throw new ArgumentException("The given ID is either ambiguous or does not correspond to a record.");
-            }
+			if (results.Rows.Count == 0) {
+				throw new System.Data.RowNotInTableException ("The given ID does not correspond to a record.");
+			} else if (results.Rows.Count > 1) {
+				throw new System.Data.DuplicateNameException ("The given ID is ambiguous.");
+			}
 
             // Update the data in the object
             InitializeData(targetObject, results.Rows[0]);

@@ -21,6 +21,8 @@ namespace DataConnector
 		/// <returns>The object of the given type with the given identifier.</returns>
 		/// <param name="id">The unique identifier of the object.</param>
 		/// <typeparam name="TObject">The type of the object to retrieve.</typeparam>
+		/// <exception cref="System.Data.RowNotInTableException">Thrown if the given ID does not correspond to a record.</exception>
+		/// <exception cref="System.Data.DuplicateNameException">Thrown if the given ID is ambiguous.</exception>
 		TObject GetObjectByID<TObject>(int id) where TObject : TBaseObject;
 
 		/// <summary>
