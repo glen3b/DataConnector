@@ -197,10 +197,9 @@ namespace DataConnector.JSON
 			// This is just a hack
 			return GetAllObjectsOfType<TChildObject> ().Where (c => {
 				foreach (var mem in c.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-					// TODO move this to a different namespace
-					DataConnector.SQL.ForeignKeyAttribute fkey;
-					if ((fkey = ((DataConnector.SQL.ForeignKeyAttribute)Attribute.GetCustomAttribute (mem, typeof(DataConnector.SQL.ForeignKeyAttribute)))) != null) {
-						if (fkey.TargetTable == typeof(TParentObject)) {
+					ForeignKeyAttribute fkey;
+					if ((fkey = ((ForeignKeyAttribute)Attribute.GetCustomAttribute (mem, typeof(ForeignKeyAttribute)))) != null) {
+						if (fkey.ForeignType == typeof(TParentObject)) {
 							var fkeyValue = mem.GetValue (c);
 							// Match foreign key relations
 							return parent.Equals (fkeyValue) || parent.ID.Equals (fkeyValue);

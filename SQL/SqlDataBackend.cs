@@ -63,7 +63,7 @@ namespace DataConnector.SQL
                     continue;
                 }
 
-                if (fkeyattr.TargetTable != typeof(TParentObject))
+				if (fkeyattr.ForeignType != typeof(TParentObject))
                 {
                     continue;
                 }
