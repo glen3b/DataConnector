@@ -274,7 +274,7 @@ namespace DataConnector.SQL
         /// <summary>
         /// Modifies the current object to match the data given in the specified DataRow.
         /// </summary>
-        protected void InitializeData(SqlDataObject targetObject, DataRow data)
+        protected virtual void InitializeData(SqlDataObject targetObject, DataRow data)
         {
             SqlBackedClassAttribute dataManagementAttribute = (SqlBackedClassAttribute)Attribute.GetCustomAttribute(targetObject.GetType(), typeof(SqlBackedClassAttribute));
             if (dataManagementAttribute == null)
@@ -284,15 +284,28 @@ namespace DataConnector.SQL
 
             foreach (FieldInfo field in targetObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
             {
-                SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
-                if (sqlFieldAttribute == null)
+                SqlFieldAttribute sqlFieldAttribute = null;
+				if ((sqlFieldAttribute = Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)) as SqlFieldAttribute) == null)
                 {
                     continue;
                 }
 
-                // Found a SQL column
-                object dataInstance = data[sqlFieldAttribute.SQLFieldName];
-                field.SetValue(targetObject, dataInstance is DBNull ? null : dataInstance);
+
+				// Found a SQL column
+				object dataInstance = data[sqlFieldAttribute.SQLFieldName];
+
+				ForeignKeyAttribute fkey = null;
+				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute))) != null) {
+					if (fkey.ForeignType == field.FieldType) {
+						// Get the object by ID and use that to set the field
+						// We have to use reflection to invoke a generic method with a type only known at runtime
+						// TODO strongly type the method names
+						field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
+					}
+				} else {
+					// Set the field directly
+					field.SetValue(targetObject, dataInstance is DBNull ? null : dataInstance);
+				}
             }
 
             SetObjectInternals(targetObject, targetObject.ID, true);
