@@ -14,6 +14,17 @@ namespace DataConnector.SQL
     {
         private ISqlWrapper _database;
 
+        /// <summary>
+        /// Gets the database wrapper in use by this data backend.
+        /// </summary>
+        public ISqlWrapper Database
+        {
+            get
+            {
+                return _database;
+            }
+        }
+
         public SqlDataBackend(ISqlWrapper databaseWrapper)
         {
             if (databaseWrapper == null)
