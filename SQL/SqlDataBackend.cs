@@ -80,7 +80,7 @@ namespace DataConnector.SQL
                 }
 
                 // Found the foreign key for our parent type
-                foreignKeyName = ((SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)))?.SQLFieldName;
+                foreignKeyName = ((SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)))?.ColumnName;
 
                 if(foreignKeyName == null)
                 {
@@ -274,7 +274,7 @@ namespace DataConnector.SQL
                 {
                     continue;
                 }
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.SQLFieldName ?? field.Name, field.GetValue(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, field.GetValue(targetObject));
                 if (sqlFieldAttribute.DataType != default(DbType))
                 {
                     // If the data type is manually specified
@@ -309,7 +309,7 @@ namespace DataConnector.SQL
 
 
 				// Found a SQL column
-				object dataInstance = data[sqlFieldAttribute.SQLFieldName ?? field.Name];
+				object dataInstance = data[sqlFieldAttribute.ColumnName ?? field.Name];
 
 				ForeignKeyAttribute fkey = null;
 				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null) {
@@ -355,12 +355,12 @@ namespace DataConnector.SQL
                 }
                 if (Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) != null)
                 {
-                    idColumnName = sqlFieldAttribute.SQLFieldName ?? field.Name;
+                    idColumnName = sqlFieldAttribute.ColumnName ?? field.Name;
                     continue;
                 }
 
                 // Found a non-ID column
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.SQLFieldName ?? field.Name, field.GetValue(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, field.GetValue(targetObject));
                 if (sqlFieldAttribute.DataType != default(DbType))
                 {
                     // If the data type is manually specified
@@ -412,7 +412,7 @@ namespace DataConnector.SQL
                 }
 
                 // Found the ID column
-                idParameter = new SqlParameter(sqlFieldAttribute.SQLFieldName ?? field.Name, targetObject.ID);
+                idParameter = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, targetObject.ID);
                 break; // No need to search further
             }
 
