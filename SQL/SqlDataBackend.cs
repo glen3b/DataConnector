@@ -133,7 +133,7 @@ namespace DataConnector.SQL
             return instance;
         }
 
-        protected void SetObjectInternals(SqlDataObject instance, int id, bool isDataBacked)
+        protected static void SetObjectInternals(SqlDataObject instance, int id, bool isDataBacked)
         {
             var idProp = instance.GetType().GetProperty("ID", System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             idProp.SetValue(instance, id);
@@ -233,9 +233,9 @@ namespace DataConnector.SQL
 
 
         /// <summary>
-        /// Modifies the current object to match the data given in the specified DataRow.
+        /// Modifies the given object to match the data given in the specified DataRow.
         /// </summary>
-        protected virtual void InitializeData(SqlDataObject targetObject, DataRow data)
+        public static void InitializeData(SqlDataObject targetObject, DataRow data)
         {
             SqlBackedClassAttribute dataManagementAttribute = (SqlBackedClassAttribute)Attribute.GetCustomAttribute(targetObject.GetType(), typeof(SqlBackedClassAttribute));
             if (dataManagementAttribute == null)
@@ -258,10 +258,12 @@ namespace DataConnector.SQL
 				ForeignKeyAttribute fkey = null;
 				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null) {
 					if (fkey.ForeignType == field.FieldType) {
-						// Get the object by ID and use that to set the field
-						// We have to use reflection to invoke a generic method with a type only known at runtime
-						// TODO strongly type the method names
-						field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
+                        // Get the object by ID and use that to set the field
+                        // We have to use reflection to invoke a generic method with a type only known at runtime
+                        // TODO strongly type the method names
+
+                        throw new NotSupportedException("The static InitializeData method does not support object-type foreign keys.");
+                        //field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
 					}
 				} else {
 					// Set the field directly
