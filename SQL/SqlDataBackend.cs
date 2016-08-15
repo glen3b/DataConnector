@@ -97,7 +97,7 @@ namespace DataConnector.SQL
 
             foreach (DataRow row in _database.RunProcedure(parentAttribute.GetChildrenProcedure, new SqlParameter(foreignKeyName, parent.ID)).Rows)
             {
-                TChildObject child = CreateObject<TChildObject>();
+                TChildObject child = Activator.CreateInstance<TChildObject>();
                 InitializeData(child, row);
                 yield return child;
             }
@@ -115,7 +115,7 @@ namespace DataConnector.SQL
         {
             if (Attribute.GetCustomAttribute(typeof(TObject), typeof(SqlSelectAllAttribute)) != null)
             {
-                return GenericSelectAll(CreateObject<TObject>);
+                return GenericSelectAll(Activator.CreateInstance<TObject>);
             }
             else
             {
@@ -126,65 +126,9 @@ namespace DataConnector.SQL
         public TObject GetObjectByID<TObject>(int id) where TObject : SqlDataObject
         {
             // TODO this is a wee bit of a hack
-            TObject instance = CreateObject<TObject>();
+            TObject instance = Activator.CreateInstance<TObject>();
             SetObjectInternals(instance, id, true);
             GenericRead(instance);
-
-            return instance;
-        }
-
-        protected TObject CreateObject<TObject>() where TObject : SqlDataObject
-        {
-            // TODO less hacky
-            // TODO fix this method
-
-            ConstructorInfo constructor = null;
-            MethodInfo createBlank = null;
-
-            try
-            {
-                constructor = typeof(TObject).GetConstructor(new Type[0]);
-            }
-            catch
-            {
-            }
-
-            try
-            {
-                createBlank = typeof(TObject).GetMethod("Create", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static, Type.DefaultBinder, Type.EmptyTypes, null);
-            }
-            catch
-            {
-            }
-
-            TObject instance = null;
-
-            if (constructor != null)
-            {
-                try
-                {
-                    instance = constructor.Invoke(new object[0]) as TObject;
-                }
-                catch
-                {
-                }
-            }
-
-            if (createBlank != null && instance == null)
-            {
-                try
-                {
-                    instance = createBlank.Invoke(null, new object[0]) as TObject;
-                }
-                catch
-                {
-                }
-            }
-
-            if (instance == null)
-            {
-                throw new ArgumentException("The specified type does not have a constructor or create method.");
-            }
 
             return instance;
         }
