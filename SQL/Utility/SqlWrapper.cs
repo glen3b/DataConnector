@@ -14,49 +14,53 @@ namespace DataConnector.SQL.Utility
         {
             ConnectionString = connString;
         }
-        
+
         protected string ConnectionString;
 
         public DataTable RunProcedure(string procedureName, params SqlParameter[] parameters)
         {
-			var connInfo = GetConnection ();
+            var connInfo = GetConnection();
 
-			if (!connInfo.Connection.State.HasFlag(ConnectionState.Open)) {
-				connInfo.Connection.Open ();
-			}
+            if (!connInfo.Connection.State.HasFlag(ConnectionState.Open))
+            {
+                connInfo.Connection.Open();
+            }
 
-			SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
+            SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddRange(parameters);
             SqlDataAdapter adapter = new SqlDataAdapter(command);
             DataTable table = new DataTable();
             adapter.Fill(table);
-            
-			if (!connInfo.Behavior.HasFlag (SqlConnectionBehavior.KeepOpen)) {
-				connInfo.Connection.Close ();
-			}
 
-			return table;
+            if (!connInfo.Behavior.HasFlag(SqlConnectionBehavior.KeepOpen))
+            {
+                connInfo.Connection.Close();
+            }
+
+            return table;
         }
 
         public int RunNonQueryProcedure(string procedureName, params SqlParameter[] parameters)
         {
-			var connInfo = GetConnection ();
+            var connInfo = GetConnection();
 
-			if (!connInfo.Connection.State.HasFlag(ConnectionState.Open)) {
-				connInfo.Connection.Open ();
-			}
+            if (!connInfo.Connection.State.HasFlag(ConnectionState.Open))
+            {
+                connInfo.Connection.Open();
+            }
 
-			SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
+            SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.AddRange(parameters);
-			var res = command.ExecuteNonQuery();
+            var res = command.ExecuteNonQuery();
 
-			if (!connInfo.Behavior.HasFlag (SqlConnectionBehavior.KeepOpen)) {
-				connInfo.Connection.Close ();
-			}
+            if (!connInfo.Behavior.HasFlag(SqlConnectionBehavior.KeepOpen))
+            {
+                connInfo.Connection.Close();
+            }
 
-			return res;
+            return res;
         }
 
         public abstract void Dispose();
