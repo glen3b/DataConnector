@@ -21,7 +21,7 @@ namespace DataConnector.SQL.Utility
         {
 			var connInfo = GetConnection ();
 
-			if (connInfo.Connection.State != ConnectionState.Open && connInfo.Connection.State != ConnectionState.Connecting) {
+			if (!connInfo.Connection.State.HasFlag(ConnectionState.Open)) {
 				connInfo.Connection.Open ();
 			}
 
@@ -43,7 +43,7 @@ namespace DataConnector.SQL.Utility
         {
 			var connInfo = GetConnection ();
 
-			if (connInfo.Connection.State != ConnectionState.Open && connInfo.Connection.State != ConnectionState.Connecting) {
+			if (!connInfo.Connection.State.HasFlag(ConnectionState.Open)) {
 				connInfo.Connection.Open ();
 			}
 
