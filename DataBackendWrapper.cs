@@ -14,7 +14,7 @@ namespace DataConnector
     {
         public void Dispose()
         {
-            // No-op: Wrapped backend may have other references
+            WrappedBackend.Dispose();
         }
 
         public IEnumerable<TObject> GetAllObjectsOfType<TObject>() where TObject : IDataObject
