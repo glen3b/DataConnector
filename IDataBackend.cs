@@ -9,14 +9,15 @@ namespace DataConnector
     public interface IDataBackend<in TBaseObject> : IDisposable where TBaseObject : IDataObject  
     {
         /// <summary>
-		/// Saves the given object into the data backend.
+		/// Saves the given object into the data backend, setting identifying information in the object if needed.
+        /// This will occur most often in inserts.
 		/// </summary>
 		/// <param name="target">The object to save.</param>
         /// <exception cref="System.Data.ReadOnlyException">Thrown if the target object type is read only.</exception>
         void SaveObject(TBaseObject target);
         
 		/// <summary>
-		/// Retrieves an object by its database identifier.
+		/// Retrieves an object by its unique database identifier.
 		/// </summary>
 		/// <returns>The object of the given type with the given identifier.</returns>
 		/// <param name="id">The unique identifier of the object.</param>
@@ -26,7 +27,7 @@ namespace DataConnector
 		TObject GetObjectByID<TObject>(int id) where TObject : TBaseObject;
 
 		/// <summary>
-		/// Retrieves all objects of a given type.
+		/// Retrieves all objects of a given type in the database.
 		/// </summary>
 		/// <returns>All objects of the given type in the data backend.</returns>
 		/// <typeparam name="TObject">The type of the objects to retrieve.</typeparam>
