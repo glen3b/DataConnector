@@ -178,6 +178,10 @@ namespace DataConnector.JSON
 
 		public IEnumerable<TObject> GetAllObjectsOfType<TObject> () where TObject : IDataObject
 		{
+			LoadBackend ();
+			if (!AllObjects.ContainsKey (typeof(TObject).FullName)) {
+				return Enumerable.Empty<TObject>();
+			}
 			return AllObjects [typeof(TObject).FullName].Values.Cast<TObject> ();
 		}
 

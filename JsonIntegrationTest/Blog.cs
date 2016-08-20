@@ -31,6 +31,9 @@ namespace JsonIntegrationTest
 
 		[JsonProperty]
 		public string Description;
+
+		[ForeignKey(typeof(User))]
+		public int OwnerUserID;
 	}
 }
 
