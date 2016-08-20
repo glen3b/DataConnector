@@ -36,7 +36,7 @@ namespace DataConnector.JSON
 
 			Serializer = new JsonSerializer ();
 			Serializer.ContractResolver = new JsonDataObjectContractResolver (this);
-			Serializer.Converters.Add (new DataObjectJsonConverter (this));
+			// Serializer.Converters.Add (new DataObjectJsonConverter (this));
 		}
 
 		/// <summary>
@@ -63,7 +63,7 @@ namespace DataConnector.JSON
 
 					if (typeof(IDataObject).IsAssignableFrom (p.PropertyType)) {
 						// TODO ensure this doesn't call excessively recursively
-						p.Converter = new DataObjectJsonConverter (Backend);
+						// p.Converter = new DataObjectJsonConverter (Backend);
 					}
 				}
 
@@ -155,7 +155,7 @@ namespace DataConnector.JSON
 
 		protected void LoadBackend ()
 		{
-			using (FileStream stream = File.Open (FilePath, FileMode.Open)) {
+			using (FileStream stream = File.Open (FilePath, FileMode.OpenOrCreate)) {
 				using (StreamReader srdr = new StreamReader (stream)) {
 					using (JsonReader reader = new JsonTextReader (srdr)) {
 						AllObjects = Serializer.Deserialize<IDictionary<string, IDictionary<int, IDataObject>>> (reader);
