@@ -35,7 +35,7 @@ namespace DataConnector.JSON
 			FilePath = filePath;
 
 			Serializer = new JsonSerializer ();
-			Serializer.ContractResolver = new JsonDataObjectContractResolver (this);
+			Serializer.ContractResolver = new JsonDataObjectContractResolver ();
 			// Serializer.Converters.Add (new DataObjectJsonConverter (this));
 		}
 
@@ -44,72 +44,64 @@ namespace DataConnector.JSON
 		/// </summary>
 		class JsonDataObjectContractResolver : DefaultContractResolver
 		{
-			public JsonDataObjectContractResolver (IDataBackend<IDataObject> backend)
+			public JsonDataObjectContractResolver ()
 			{
-				Backend = backend;
 			}
-
-			IDataBackend<IDataObject> Backend;
 
 			protected override IList<JsonProperty> CreateProperties (Type type, MemberSerialization memberSerialization)
 			{
 				// TODO this is a bit hacky
 
-				var props = base.CreateProperties (type, MemberSerialization.Fields);
+				var props = base.CreateProperties (type, MemberSerialization.OptIn);
 
 				foreach (var p in props) {
 					p.Writable = true;
 					p.Readable = true;
-
-					if (typeof(IDataObject).IsAssignableFrom (p.PropertyType)) {
-						// TODO ensure this doesn't call excessively recursively
-						// p.Converter = new DataObjectJsonConverter (Backend);
-					}
 				}
 
 				return props;
 			}
 		}
 
-		class DataObjectJsonConverter : JsonConverter
-		{
-
-			protected IDataBackend<IDataObject> Backend;
-
-			public DataObjectJsonConverter (IDataBackend<IDataObject> backend)
-			{
-				Backend = backend;
-			}
-
-			public override bool CanConvert (Type objectType)
-			{
-				return typeof(IDataObject).IsAssignableFrom (objectType);
-			}
-
-			public override object ReadJson (JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-			{
-				if (!typeof(IDataObject).IsAssignableFrom (objectType)) {
-					throw new ArgumentException ("The given object is not an IDataObject");
-				}
-
-				// We wrote an ID, allow an exception if something's not right
-				int id = reader.ReadAsInt32 ().Value;
-
-				// TODO strongly type the name
-				var method = Backend.GetType ().GetMethod ("GetObjectByID").MakeGenericMethod (objectType);
-				return method.Invoke (Backend, new Object[]{ id });
-			}
-
-			public override void WriteJson (JsonWriter writer, object value, JsonSerializer serializer)
-			{
-				if (value is IDataObject) {
-					// Just write an ID
-					writer.WriteValue (((IDataObject)value).ID);
-				} else {
-					throw new ArgumentException ("The given object is not an IDataObject");
-				}
-			}
-		}
+//		class DataObjectJsonConverter : JsonConverter
+//		{
+//
+//			protected IDataBackend<IDataObject> Backend;
+//
+//			public DataObjectJsonConverter (IDataBackend<IDataObject> backend)
+//			{
+//				Backend = backend;
+//			}
+//
+//			public override bool CanConvert (Type objectType)
+//			{
+//				return typeof(IDataObject).IsAssignableFrom (objectType);
+//			}
+//
+//			public override object ReadJson (JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+//			{
+//				if (!typeof(IDataObject).IsAssignableFrom (objectType)) {
+//					throw new ArgumentException ("The given object is not an IDataObject");
+//				}
+//
+//				// We wrote an ID, allow an exception if something's not right
+//				int id = reader.ReadAsInt32 ().Value;
+//
+//				// TODO strongly type the name
+//				var method = Backend.GetType ().GetMethod ("GetObjectByID").MakeGenericMethod (objectType);
+//				return method.Invoke (Backend, new Object[]{ id });
+//			}
+//
+//			public override void WriteJson (JsonWriter writer, object value, JsonSerializer serializer)
+//			{
+//				if (value is IDataObject) {
+//					// Just write an ID
+//					writer.WriteValue (((IDataObject)value).ID);
+//				} else {
+//					throw new ArgumentException ("The given object is not an IDataObject");
+//				}
+//			}
+//		}
 
 		/// <summary>
 		/// The dictionary containing type-separated dictionaries of IDs to objects.
