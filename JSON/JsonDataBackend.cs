@@ -24,6 +24,11 @@ namespace DataConnector.JSON
 			private set;
 		}
 
+		/// <summary>
+		/// Gets a collection of assemblies from which loading of user types should be attempted.
+		/// </summary>
+		public ICollection<Assembly> AssembliesToLoad{ get; private set; }
+
 		protected readonly JsonSerializer Serializer;
 
 		public JsonDataBackend (string filePath)
@@ -36,6 +41,10 @@ namespace DataConnector.JSON
 
 			Serializer = new JsonSerializer ();
 			Serializer.ContractResolver = new JsonDataObjectContractResolver ();
+			AssembliesToLoad = new HashSet<Assembly> (new Assembly[] {
+				typeof(IDataObject).Assembly,
+				typeof(JsonDataBackend).Assembly
+			});
 			// Serializer.Converters.Add (new DataObjectJsonConverter (this));
 		}
 
@@ -63,45 +72,45 @@ namespace DataConnector.JSON
 			}
 		}
 
-//		class DataObjectJsonConverter : JsonConverter
-//		{
-//
-//			protected IDataBackend<IDataObject> Backend;
-//
-//			public DataObjectJsonConverter (IDataBackend<IDataObject> backend)
-//			{
-//				Backend = backend;
-//			}
-//
-//			public override bool CanConvert (Type objectType)
-//			{
-//				return typeof(IDataObject).IsAssignableFrom (objectType);
-//			}
-//
-//			public override object ReadJson (JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-//			{
-//				if (!typeof(IDataObject).IsAssignableFrom (objectType)) {
-//					throw new ArgumentException ("The given object is not an IDataObject");
-//				}
-//
-//				// We wrote an ID, allow an exception if something's not right
-//				int id = reader.ReadAsInt32 ().Value;
-//
-//				// TODO strongly type the name
-//				var method = Backend.GetType ().GetMethod ("GetObjectByID").MakeGenericMethod (objectType);
-//				return method.Invoke (Backend, new Object[]{ id });
-//			}
-//
-//			public override void WriteJson (JsonWriter writer, object value, JsonSerializer serializer)
-//			{
-//				if (value is IDataObject) {
-//					// Just write an ID
-//					writer.WriteValue (((IDataObject)value).ID);
-//				} else {
-//					throw new ArgumentException ("The given object is not an IDataObject");
-//				}
-//			}
-//		}
+		//		class DataObjectJsonConverter : JsonConverter
+		//		{
+		//
+		//			protected IDataBackend<IDataObject> Backend;
+		//
+		//			public DataObjectJsonConverter (IDataBackend<IDataObject> backend)
+		//			{
+		//				Backend = backend;
+		//			}
+		//
+		//			public override bool CanConvert (Type objectType)
+		//			{
+		//				return typeof(IDataObject).IsAssignableFrom (objectType);
+		//			}
+		//
+		//			public override object ReadJson (JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+		//			{
+		//				if (!typeof(IDataObject).IsAssignableFrom (objectType)) {
+		//					throw new ArgumentException ("The given object is not an IDataObject");
+		//				}
+		//
+		//				// We wrote an ID, allow an exception if something's not right
+		//				int id = reader.ReadAsInt32 ().Value;
+		//
+		//				// TODO strongly type the name
+		//				var method = Backend.GetType ().GetMethod ("GetObjectByID").MakeGenericMethod (objectType);
+		//				return method.Invoke (Backend, new Object[]{ id });
+		//			}
+		//
+		//			public override void WriteJson (JsonWriter writer, object value, JsonSerializer serializer)
+		//			{
+		//				if (value is IDataObject) {
+		//					// Just write an ID
+		//					writer.WriteValue (((IDataObject)value).ID);
+		//				} else {
+		//					throw new ArgumentException ("The given object is not an IDataObject");
+		//				}
+		//			}
+		//		}
 
 		/// <summary>
 		/// The dictionary containing type-separated dictionaries of IDs to objects.
@@ -116,6 +125,11 @@ namespace DataConnector.JSON
 			if (!AllObjects.TryGetValue (target.GetType ().FullName, out objectTypeCollection)) {
 				objectTypeCollection = new Dictionary<int, IDataObject> ();
 				AllObjects [target.GetType ().FullName] = objectTypeCollection;
+			}
+
+			try {
+				AssembliesToLoad.Add (target.GetType ().Assembly);
+			} catch {
 			}
 
 			if (!target.IsStoredData) {
@@ -150,7 +164,34 @@ namespace DataConnector.JSON
 			using (FileStream stream = File.Open (FilePath, FileMode.OpenOrCreate)) {
 				using (StreamReader srdr = new StreamReader (stream)) {
 					using (JsonReader reader = new JsonTextReader (srdr)) {
-						AllObjects = Serializer.Deserialize<IDictionary<string, IDictionary<int, IDataObject>>> (reader);
+						var deserialized = Serializer.Deserialize<IDictionary<string, IDictionary<int, JObject>>> (reader);
+						var newAllDictionary = new Dictionary<string, IDictionary<int, IDataObject>> ();
+						foreach (var typeToDictionaryPair in deserialized) {
+							Type realType = null;
+							List<Exception> inner = new List<Exception> ();
+
+							foreach (var assembly in AssembliesToLoad) {
+								try{
+									if(realType == null){
+										realType = assembly.GetType(typeToDictionaryPair.Key, true);
+									}
+								}catch(Exception ex){
+									inner.Add (ex);
+								}
+							}
+
+							if(realType == null){
+								throw new AggregateException ("Could not find the type " + typeToDictionaryPair.Key, inner);
+							}
+
+							var idToObjectDict = new Dictionary<int, IDataObject> ();
+							foreach (var idToObjectPair in typeToDictionaryPair.Value) {
+								idToObjectDict.Add (idToObjectPair.Key, (IDataObject)idToObjectPair.Value.ToObject (realType));
+							}
+
+							newAllDictionary.Add (typeToDictionaryPair.Key, idToObjectDict);
+						}
+						AllObjects = newAllDictionary;
 					}
 				}
 			}
@@ -159,6 +200,7 @@ namespace DataConnector.JSON
 		public TObject GetObjectByID<TObject> (int id) where TObject : IDataObject
 		{
 			IDataObject result = null;
+			AssembliesToLoad.Add (typeof(TObject).Assembly);
 			try {
 				result = AllObjects [typeof(TObject).FullName] [id];
 			} catch {
@@ -168,7 +210,7 @@ namespace DataConnector.JSON
 
 				try {
 					result = AllObjects [typeof(TObject).FullName] [id];
-				} catch (Exception ex){
+				} catch (Exception ex) {
 					throw new RowNotInTableException ("The given ID does not correspond to a record.", ex);
 				}
 			}
@@ -178,9 +220,10 @@ namespace DataConnector.JSON
 
 		public IEnumerable<TObject> GetAllObjectsOfType<TObject> () where TObject : IDataObject
 		{
+			AssembliesToLoad.Add (typeof(TObject).Assembly);
 			LoadBackend ();
 			if (!AllObjects.ContainsKey (typeof(TObject).FullName)) {
-				return Enumerable.Empty<TObject>();
+				return Enumerable.Empty<TObject> ();
 			}
 			return AllObjects [typeof(TObject).FullName].Values.Cast<TObject> ();
 		}
@@ -189,6 +232,8 @@ namespace DataConnector.JSON
 			where TParentObject : IDataObject
 			where TChildObject : IDataObject
 		{
+			AssembliesToLoad.Add (typeof(TParentObject).Assembly);
+			AssembliesToLoad.Add (typeof(TChildObject).Assembly);
 			// TODO this is intended to be able to use more efficient implementations
 			// This is just a hack
 			return GetAllObjectsOfType<TChildObject> ().Where (c => {

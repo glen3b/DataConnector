@@ -23,6 +23,7 @@ namespace JsonIntegrationTest
 			backend.SaveObject (blog);
 
 			JsonDataBackend readBackend = new JsonDataBackend ("TestData.json");
+			readBackend.AssembliesToLoad.Add (typeof(MainClass).Assembly);
 			foreach (var usr in readBackend.GetAllObjectsOfType<User>()) {
 				Console.WriteLine ("UserID:{0} is {1} ({2})", usr.ID, usr.Username, usr.Name);
 			}
