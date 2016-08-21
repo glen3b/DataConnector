@@ -57,7 +57,7 @@
     <Compile Include="Utility\SqlWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataConnector\DataConnector.csproj">
+    <ProjectReference Include="..\DataConnector.csproj">
       <Project>{67a3e185-33f7-4c24-84da-90196a9e59e3}</Project>
       <Name>DataConnector</Name>
     </ProjectReference>
