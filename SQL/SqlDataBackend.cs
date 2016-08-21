@@ -42,6 +42,7 @@ namespace DataConnector.SQL
 
 		}
 
+
         public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
             where TParentObject : SqlDataObject
             where TChildObject : SqlDataObject
@@ -51,14 +52,7 @@ namespace DataConnector.SQL
                 throw new ArgumentNullException("parent");
             }
 
-            return GetChildrenOf<TParentObject, TChildObject>(parent.ID);
-        }
-
-        public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(int parentId)
-            where TParentObject : SqlDataObject
-            where TChildObject : SqlDataObject
-        {
-            SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
+			SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
             if (parentAttribute == null)
             {
                 // Per interface spec
@@ -101,7 +95,7 @@ namespace DataConnector.SQL
                 throw new NotSupportedException("The correct foreign key was not found in the child type.");
             }
 
-            foreach (DataRow row in _database.RunProcedure(parentAttribute.GetChildrenProcedure, new SqlParameter(foreignKeyName, parentId)).Rows)
+            foreach (DataRow row in _database.RunProcedure(parentAttribute.GetChildrenProcedure, new SqlParameter(foreignKeyName, parent.ID)).Rows)
             {
                 TChildObject child = Activator.CreateInstance<TChildObject>();
                 InitializeData(child, row);
