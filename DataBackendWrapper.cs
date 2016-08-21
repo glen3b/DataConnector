@@ -31,6 +31,13 @@ namespace DataConnector
             return InvokeBackendInstanceMethod<IEnumerable<TChildObject>>(nameof(WrappedBackend.GetChildrenOf), new Type[] { typeof(TParentObject), typeof(TChildObject) }, parent);
         }
 
+        public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(int parentId)
+            where TParentObject : IDataObject
+            where TChildObject : IDataObject
+        {
+            return InvokeBackendInstanceMethod<IEnumerable<TChildObject>>(nameof(WrappedBackend.GetChildrenOf), new Type[] { typeof(TParentObject), typeof(TChildObject) }, parentId);
+        }
+
         public TObject GetObjectByID<TObject>(int id) where TObject : IDataObject
         {
             // Backends are expected to use the type parameter, so we have to use reflection
@@ -51,9 +58,11 @@ namespace DataConnector
 
         protected virtual TReturn InvokeBackendInstanceMethod<TReturn>(string methodName, Type[] genericParameters, params object[] parameters)
         {
+            const System.Reflection.BindingFlags bindingFlags = System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy;
+
             try
-            {
-                var method = WrappedBackend.GetType().GetMethod(methodName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy);
+            {                
+                var method = WrappedBackend.GetType().GetMethod(methodName, bindingFlags, Type.DefaultBinder, new Type[] { typeof(int) }, null);
 
                 var properMethod = method.MakeGenericMethod(genericParameters);
 
