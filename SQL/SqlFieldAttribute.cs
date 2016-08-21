@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL
 {
+    [Obsolete("Will be replaced with a backend-agnostic storage attribute identifier")]
 	[AttributeUsage (AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
 	public sealed class SqlFieldAttribute : Attribute
 	{
