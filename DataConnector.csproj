@@ -39,22 +39,8 @@
     <Compile Include="IDataBackend.cs" />
     <Compile Include="PrimaryKeyAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SQL\SqlRelationshipOneToManyAttribute.cs" />
-    <Compile Include="SQL\PossibleValueAttribute.cs" />
-    <Compile Include="SQL\SqlBackedClassAttribute.cs" />
-    <Compile Include="SQL\SqlDataBackend.cs" />
-    <Compile Include="SQL\SqlDataObject.cs" />
-    <Compile Include="SQL\SqlFieldAttribute.cs" />
-    <Compile Include="SQL\SqlSelectAllAttribute.cs" />
-    <Compile Include="SQL\Utility\ISqlWrapper.cs" />
-    <Compile Include="SQL\Utility\OneInstanceSqlWrapper.cs" />
-    <Compile Include="SQL\Utility\ReferenceTrackingSqlWrapper.cs" />
-    <Compile Include="SQL\Utility\SqlWrapper.cs" />
     <Compile Include="IDataObject.cs" />
     <Compile Include="IDeleteableObject.cs" />
-    <Compile Include="SQL\Utility\SqlConnectionInformation.cs" />
-    <Compile Include="SQL\Utility\SqlConnectionBehavior.cs" />
-    <Compile Include="SQL\Utility\NewObjectSqlWrapper.cs" />
     <Compile Include="ForeignKeyAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
