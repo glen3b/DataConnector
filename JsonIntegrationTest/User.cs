@@ -11,31 +11,23 @@ namespace JsonIntegrationTest
 			IsStoredData = false;
 		}
 
-		[PrimaryKey]
-		[JsonProperty ("UserID")]
-		private int _id;
-
-		public int ID {
-			get {
-				return _id;
-			}
-			protected set {
-				_id = value;
-			}
-		}
+		
+        [PrimaryKey]
+        [StoredData(StoredName = "UserID")]
+        public int ID { get; protected set; }
 
 		public Boolean IsStoredData { get; protected set; }
 
-		[JsonProperty]
+		[StoredData]
 		public string Name;
 
-		[JsonProperty]
+		[StoredData]
 		public string Username;
 
-		[JsonProperty]
+		[StoredData]
 		public string PasswordHash;
 
-		[JsonProperty]
+		[StoredData]
 		public DateTime BirthDate;
 	}
 }

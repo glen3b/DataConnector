@@ -30,6 +30,8 @@ namespace JsonIntegrationTest
 			foreach (var lblog in readBackend.GetAllObjectsOfType<Blog>()) {
 				Console.WriteLine ("BlogID:{0} is {1} ({2})", lblog.ID, lblog.Name, lblog.Description);
 			}
+
+            Console.ReadKey(true);
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace JsonIntegrationTest
 		}
 
 		[PrimaryKey]
-		[JsonProperty("BlogID")]
+		[StoredData(StoredName = "BlogID")]
 		private int _id;
 
 		public int ID {
@@ -26,12 +26,13 @@ namespace JsonIntegrationTest
 
 		public bool IsStoredData { get; protected set; }
 
-		[JsonProperty]
-		public string Name;
+		[StoredData]
+        public string Name { get; set; }
 
-		[JsonProperty]
+		[StoredData]
 		public string Description;
 
+        [StoredData]
 		[ForeignKey(typeof(User))]
 		public int OwnerUserID;
 	}
