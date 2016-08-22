@@ -49,7 +49,7 @@ namespace DataConnector
 		/// Gets the children of a given object, which is specified vai ID. Expected to be used in one-to-many relationships.
 		/// </summary>
 		/// <returns>The children of the given parent object.</returns>
-		/// <param name="parent">The parent object's ID, for which children will be retrieved.</param>
+		/// <param name="parentId">The parent object's ID, for which children will be retrieved.</param>
 		/// <typeparam name="TParentObject">The type of the parent.</typeparam>
 		/// <typeparam name="TChildObject">The type of the children.</typeparam>
 		/// <exception cref="System.NotSupportedException">Thrown if the given pair of types does not have a one-to-many relationship.</exception>
