@@ -272,7 +272,7 @@ namespace DataConnector.JSON
             return AllObjects[typeof(TObject).FullName].Values.Cast<TObject>();
         }
 
-        public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
+        public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(int parentId)
             where TParentObject : IDataObject
             where TChildObject : IDataObject
         {
@@ -291,7 +291,7 @@ namespace DataConnector.JSON
                         {
                             var fkeyValue = mem.GetValue(c);
                             // Match foreign key relations
-                            return parent.Equals(fkeyValue) || parent.ID.Equals(fkeyValue);
+                            return parentId.Equals(fkeyValue);
                         }
                     }
                 }
@@ -300,6 +300,13 @@ namespace DataConnector.JSON
                 // Do not include in return
                 return false;
             });
+        }
+
+        public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
+            where TParentObject : IDataObject
+            where TChildObject : IDataObject
+        {
+            return GetChildrenOf<TParentObject, TChildObject>(parent.ID);
         }
 
         public void Dispose()
