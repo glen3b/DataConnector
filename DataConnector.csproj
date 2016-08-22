@@ -42,6 +42,7 @@
     <Compile Include="IDataObject.cs" />
     <Compile Include="IDeleteableObject.cs" />
     <Compile Include="ForeignKeyAttribute.cs" />
+    <Compile Include="StoredDataAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

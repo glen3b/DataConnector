@@ -92,7 +92,7 @@ namespace DataConnector.SQL
                 }
 
                 // Found the foreign key for our parent type
-                foreignKeyName = ((SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)))?.ColumnName;
+                foreignKeyName = ((StoredDataAttribute)Attribute.GetCustomAttribute(field, typeof(StoredDataAttribute)))?.StoredName;
 
                 if (foreignKeyName == null)
                 {
@@ -143,14 +143,13 @@ namespace DataConnector.SQL
             return instance;
         }
 
-        [Obsolete("Broken for non-SqlDataObject things")]
-        protected static void SetObjectInternals(SqlDataObject instance, int id, bool isDataBacked)
+        protected static void SetObjectInternals(IDataObject instance, int id, bool isDataBacked)
         {
 
-            var idProp = instance.GetType().GetProperty("ID", System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var idProp = instance.GetType().GetProperty(nameof(instance.ID), BindingFlags.SetProperty | BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             idProp.SetValue(instance, id);
 
-            var dataBacked = instance.GetType().GetField("IsSQLBacked", System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var dataBacked = instance.GetType().GetProperty(nameof(instance.IsStoredData), BindingFlags.SetProperty | BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             dataBacked.SetValue(instance, isDataBacked);
 
         }
@@ -225,17 +224,17 @@ namespace DataConnector.SQL
 
             GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
-                SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
+                StoredDataAttribute sqlFieldAttribute = (StoredDataAttribute)Attribute.GetCustomAttribute(field, typeof(StoredDataAttribute));
                 if (sqlFieldAttribute == null)
                 {
                     // Continue
                     return;
                 }
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, getter(targetObject));
-                if (sqlFieldAttribute.DataType != default(DbType))
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject));
+                if (sqlFieldAttribute.DataType.HasValue)
                 {
                     // If the data type is manually specified
-                    param.DbType = sqlFieldAttribute.DataType;
+                    param.DbType = sqlFieldAttribute.DataType.Value;
                 }
                 parameters.Add(param);
             });
@@ -310,15 +309,15 @@ namespace DataConnector.SQL
 
             SetFieldsAndProperties(targetObject.GetType(), (field, setter) =>
             {
-                SqlFieldAttribute sqlFieldAttribute = null;
-                if ((sqlFieldAttribute = Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)) as SqlFieldAttribute) == null)
+                StoredDataAttribute sqlFieldAttribute = null;
+                if ((sqlFieldAttribute = Attribute.GetCustomAttribute(field, typeof(StoredDataAttribute)) as StoredDataAttribute) == null)
                 {
                     return;
                 }
 
 
                 // Found a SQL column
-                object dataInstance = data[sqlFieldAttribute.ColumnName ?? field.Name];
+                object dataInstance = data[sqlFieldAttribute.StoredName ?? field.Name];
 
                 ForeignKeyAttribute fkey = null;
                 if ((fkey = Attribute.GetCustomAttribute(field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null)
@@ -363,7 +362,7 @@ namespace DataConnector.SQL
 
             GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
-                SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
+                StoredDataAttribute sqlFieldAttribute = (StoredDataAttribute)Attribute.GetCustomAttribute(field, typeof(StoredDataAttribute));
                 if (sqlFieldAttribute == null)
                 {
                     // Continue
@@ -372,16 +371,16 @@ namespace DataConnector.SQL
                 if (Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) != null)
                 {
                     // Set ID and handle specially
-                    idColumnName = sqlFieldAttribute.ColumnName ?? field.Name;
+                    idColumnName = sqlFieldAttribute.StoredName ?? field.Name;
                     return;
                 }
 
                 // Found a non-ID column
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, getter(targetObject));
-                if (sqlFieldAttribute.DataType != default(DbType))
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject));
+                if (sqlFieldAttribute.DataType.HasValue)
                 {
                     // If the data type is manually specified
-                    param.DbType = sqlFieldAttribute.DataType;
+                    param.DbType = sqlFieldAttribute.DataType.Value;
                 }
                 parameters.Add(param);
             });
@@ -428,14 +427,14 @@ namespace DataConnector.SQL
                     return;
                 }
 
-                SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
+                StoredDataAttribute sqlFieldAttribute = (StoredDataAttribute)Attribute.GetCustomAttribute(field, typeof(StoredDataAttribute));
                 if (sqlFieldAttribute == null || Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) == null)
                 {
                     return;
                 }
 
                 // Found the ID column
-                idParameter = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, targetObject.ID);
+                idParameter = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, targetObject.ID);
             });
 
 

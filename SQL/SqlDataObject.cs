@@ -10,9 +10,15 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL
 {
+    [Obsolete("Please implement IDataObject directly.")]
     public abstract class SqlDataObject : IDataObject
     {
-        public bool IsStoredData { get { return IsSQLBacked; } }
+        public bool IsStoredData { get { return IsSQLBacked; }
+            protected set
+            {
+                IsSQLBacked = value;
+            }
+        }
 
         protected bool IsSQLBacked;
         // All SQL objects should have some form of ID
