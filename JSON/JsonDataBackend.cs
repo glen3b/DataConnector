@@ -220,7 +220,10 @@ namespace DataConnector.JSON
                             var idToObjectDict = new Dictionary<int, IDataObject>();
                             foreach (var idToObjectPair in typeToDictionaryPair.Value)
                             {
-                                idToObjectDict.Add(idToObjectPair.Key, (IDataObject)idToObjectPair.Value.ToObject(realType));
+                                var obj = (IDataObject)idToObjectPair.Value.ToObject(realType);
+                                obj.GetType().GetProperty(nameof(obj.IsStoredData), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.FlattenHierarchy).SetValue(obj, true);
+                                obj.GetType().GetProperty(nameof(obj.ID), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.SetProperty | BindingFlags.Instance | BindingFlags.FlattenHierarchy).SetValue(obj, idToObjectPair.Key);
+                                idToObjectDict.Add(idToObjectPair.Key, obj);
                             }
 
                             newAllDictionary.Add(typeToDictionaryPair.Key, idToObjectDict);
