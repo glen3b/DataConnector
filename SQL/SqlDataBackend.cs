@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL
 {
-    public class SqlDataBackend : IDataBackend<SqlDataObject>
+    public class SqlDataBackend : IDataBackend
     {
         private ISqlWrapper _database;
 
@@ -50,8 +50,8 @@ namespace DataConnector.SQL
 
 
         public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
-            where TParentObject : SqlDataObject
-            where TChildObject : SqlDataObject
+            where TParentObject : IDataObject
+            where TChildObject : IDataObject
         {
             if (parent == null)
             {
@@ -113,7 +113,7 @@ namespace DataConnector.SQL
             }
         }
 
-        protected IEnumerable<TObject> EnumeratePossibleValueAttributes<TObject>() where TObject : SqlDataObject
+        protected IEnumerable<TObject> EnumeratePossibleValueAttributes<TObject>() where TObject : IDataObject
         {
             foreach (PossibleValueAttribute attr in Attribute.GetCustomAttributes(typeof(TObject), typeof(PossibleValueAttribute)))
             {
@@ -121,7 +121,7 @@ namespace DataConnector.SQL
             }
         }
 
-        public IEnumerable<TObject> GetAllObjectsOfType<TObject>() where TObject : SqlDataObject
+        public IEnumerable<TObject> GetAllObjectsOfType<TObject>() where TObject : IDataObject
         {
             if (Attribute.GetCustomAttribute(typeof(TObject), typeof(SqlSelectAllAttribute)) != null)
             {
@@ -133,7 +133,7 @@ namespace DataConnector.SQL
             }
         }
 
-        public TObject GetObjectByID<TObject>(int id) where TObject : SqlDataObject
+        public TObject GetObjectByID<TObject>(int id) where TObject : IDataObject
         {
             // TODO this is a wee bit of a hack
             TObject instance = Activator.CreateInstance<TObject>();
@@ -154,13 +154,8 @@ namespace DataConnector.SQL
 
         }
 
-        public void SaveObject(SqlDataObject target)
+        public void SaveObject(IDataObject target)
         {
-            if (!(target is SqlDataObject))
-            {
-                throw new ArgumentException("The SqlDataBackend cannot save objects unless they extend SqlDataObject.");
-            }
-
             SqlBackedClassAttribute dataAttr = Attribute.GetCustomAttribute(target.GetType(), typeof(SqlBackedClassAttribute)) as SqlBackedClassAttribute;
 
             if (dataAttr == null)
@@ -175,15 +170,15 @@ namespace DataConnector.SQL
 
             if (target.IsStoredData)
             {
-                GenericUpdate(target as SqlDataObject);
+                GenericUpdate(target);
             }
             else
             {
-                GenericInsert(target as SqlDataObject);
+                GenericInsert(target);
             }
         }
 
-        protected IEnumerable<TObject> GenericSelectAll<TObject>(Func<TObject> createBlank) where TObject : SqlDataObject
+        protected IEnumerable<TObject> GenericSelectAll<TObject>(Func<TObject> createBlank) where TObject : IDataObject
         {
             SqlSelectAllAttribute dataManagementAttribute = (SqlSelectAllAttribute)Attribute.GetCustomAttribute(typeof(TObject), typeof(SqlSelectAllAttribute));
             if (dataManagementAttribute == null)
@@ -201,7 +196,7 @@ namespace DataConnector.SQL
         }
 
         // Uses annotations to provide a generic update function to all proper DataObjects
-        protected void GenericUpdate(SqlDataObject targetObject)
+        protected void GenericUpdate(IDataObject targetObject)
         {
             if (targetObject == null)
             {
@@ -299,7 +294,7 @@ namespace DataConnector.SQL
         /// <summary>
         /// Modifies the given object to match the data given in the specified DataRow.
         /// </summary>
-        public static void InitializeData(SqlDataObject targetObject, DataRow data)
+        public static void InitializeData(IDataObject targetObject, DataRow data)
         {
             SqlBackedClassAttribute dataManagementAttribute = (SqlBackedClassAttribute)Attribute.GetCustomAttribute(targetObject.GetType(), typeof(SqlBackedClassAttribute));
             if (dataManagementAttribute == null)
@@ -343,7 +338,7 @@ namespace DataConnector.SQL
         }
 
         // Uses annotations to provide a generic insert function to all proper DataObjects
-        protected void GenericInsert(SqlDataObject targetObject)
+        protected void GenericInsert(IDataObject targetObject)
         {
             if (targetObject == null)
             {
@@ -404,7 +399,7 @@ namespace DataConnector.SQL
         }
 
         // Uses annotations to provide a generic read function to all proper DataObjects
-        protected void GenericRead(SqlDataObject targetObject)
+        protected void GenericRead(IDataObject targetObject)
         {
             if (targetObject == null)
             {

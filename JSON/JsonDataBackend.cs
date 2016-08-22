@@ -13,7 +13,7 @@ namespace DataConnector.JSON
 	/// <summary>
 	/// Uses Json.NET as a data storage backend. Target objects are expected to have the appropriate attributes.
 	/// </summary>
-	public class JsonDataBackend : IDataBackend<IDataObject>
+	public class JsonDataBackend : IDataBackend
 	{
 		/// <summary>
 		/// Gets the path of the backend file.
