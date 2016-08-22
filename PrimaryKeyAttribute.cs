@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector
 {
-	[AttributeUsage (AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
 	public sealed class PrimaryKeyAttribute : Attribute
 	{
 		public PrimaryKeyAttribute ()
