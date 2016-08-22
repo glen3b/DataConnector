@@ -25,6 +25,11 @@ namespace DataConnector.SQL
             }
         }
 
+        /// <summary>
+        /// The binding flags which are used to find data storage members.
+        /// </summary>
+        public static readonly BindingFlags SearchBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
+
         public SqlDataBackend(ISqlWrapper databaseWrapper)
         {
             if (databaseWrapper == null)
@@ -34,13 +39,14 @@ namespace DataConnector.SQL
             _database = databaseWrapper;
         }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="DataConnector.SQL.SqlDataBackend"/> class, using a backend wrapper of type <see cref="DataConnector.SQL.Utility.NewObjectSqlWrapper"/>.
-		/// </summary>
-		/// <param name="connectionString">The connection string to initialize the backend wrapper with.</param>
-		public SqlDataBackend(string connectionString) : this(new NewObjectSqlWrapper(connectionString)) {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataConnector.SQL.SqlDataBackend"/> class, using a backend wrapper of type <see cref="DataConnector.SQL.Utility.NewObjectSqlWrapper"/>.
+        /// </summary>
+        /// <param name="connectionString">The connection string to initialize the backend wrapper with.</param>
+        public SqlDataBackend(string connectionString) : this(new NewObjectSqlWrapper(connectionString))
+        {
 
-		}
+        }
 
 
         public IEnumerable<TChildObject> GetChildrenOf<TParentObject, TChildObject>(TParentObject parent)
@@ -52,7 +58,7 @@ namespace DataConnector.SQL
                 throw new ArgumentNullException("parent");
             }
 
-			SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
+            SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
             if (parentAttribute == null)
             {
                 // Per interface spec
@@ -65,30 +71,34 @@ namespace DataConnector.SQL
             }
 
             string foreignKeyName = null;
-            foreach (var field in typeof(TChildObject).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            GetFieldsAndProperties(typeof(TChildObject), (field, getter) =>
             {
+                if (foreignKeyName != null)
+                {
+                    // Already found it
+                    return;
+                }
+
                 ForeignKeyAttribute fkeyattr = null;
                 if ((fkeyattr = ((ForeignKeyAttribute)Attribute.GetCustomAttribute(field, typeof(ForeignKeyAttribute)))) == null)
                 {
                     // Continue
-                    continue;
+                    return;
                 }
 
-				if (fkeyattr.ForeignType != typeof(TParentObject))
+                if (fkeyattr.ForeignType != typeof(TParentObject))
                 {
-                    continue;
+                    return;
                 }
 
                 // Found the foreign key for our parent type
                 foreignKeyName = ((SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)))?.ColumnName;
 
-                if(foreignKeyName == null)
+                if (foreignKeyName == null)
                 {
                     foreignKeyName = field.Name;
                 }
-
-                break;
-            }
+            });
 
             if (foreignKeyName == null)
             {
@@ -133,8 +143,10 @@ namespace DataConnector.SQL
             return instance;
         }
 
+        [Obsolete("Broken for non-SqlDataObject things")]
         protected static void SetObjectInternals(SqlDataObject instance, int id, bool isDataBacked)
         {
+
             var idProp = instance.GetType().GetProperty("ID", System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.SetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             idProp.SetValue(instance, id);
 
@@ -151,13 +163,13 @@ namespace DataConnector.SQL
             }
 
             SqlBackedClassAttribute dataAttr = Attribute.GetCustomAttribute(target.GetType(), typeof(SqlBackedClassAttribute)) as SqlBackedClassAttribute;
-                        
-            if(dataAttr == null)
+
+            if (dataAttr == null)
             {
                 throw new InvalidOperationException("SqlBackedClassAttribute not found on the type of the given object.");
             }
 
-            if(dataAttr.InsertProcedureName == null && dataAttr.UpdateProcedureName == null)
+            if (dataAttr.InsertProcedureName == null && dataAttr.UpdateProcedureName == null)
             {
                 throw new ReadOnlyException("The given object type is read only.");
             }
@@ -211,26 +223,79 @@ namespace DataConnector.SQL
 
             List<SqlParameter> parameters = new List<SqlParameter>();
 
-            foreach (FieldInfo field in targetObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
                 SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
                 if (sqlFieldAttribute == null)
                 {
-                    continue;
+                    // Continue
+                    return;
                 }
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, field.GetValue(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, getter(targetObject));
                 if (sqlFieldAttribute.DataType != default(DbType))
                 {
                     // If the data type is manually specified
                     param.DbType = sqlFieldAttribute.DataType;
                 }
                 parameters.Add(param);
-            }
+            });
 
             // Run the actual update
             _database.RunNonQueryProcedure(dataManagementAttribute.UpdateProcedureName, parameters.ToArray());
         }
 
+        /// <summary>
+        /// Sets fields and properties on a type. Uses <see cref="SearchBindingFlags"/> and <see cref="BindingFlags.SetProperty"/>.
+        /// </summary>
+        /// <param name="type">The type to process.</param>
+        /// <param name="processor">The member processor. Takes a member and a setter delegate. The setter delegate takes an object and a value in that order.</param>
+        protected static void SetFieldsAndProperties(Type type, Action<MemberInfo, Action<object, object>> processor)
+        {
+            foreach (FieldInfo field in type.GetFields(SearchBindingFlags))
+            {
+                processor(field, (obj, val) => field.SetValue(obj, val));
+            }
+
+            foreach (PropertyInfo prop in type.GetProperties(SearchBindingFlags | BindingFlags.SetProperty))
+            {
+                processor(prop, (obj, val) => prop.SetValue(obj, val));
+            }
+        }
+
+        /// <summary>
+        /// Gets fields and properties on a type. Uses <see cref="SearchBindingFlags"/> and <see cref="BindingFlags.GetProperty"/>.
+        /// </summary>
+        /// <param name="type">The type to process.</param>
+        /// <param name="processor">The member processor. Takes a member and a getter delegate. The getter delegate takes an object.</param>
+        protected static void GetFieldsAndProperties(Type type, Action<MemberInfo, Func<object, object>> processor)
+        {
+            foreach (FieldInfo field in type.GetFields(SearchBindingFlags))
+            {
+                processor(field, (obj) => field.GetValue(obj));
+            }
+
+            foreach (PropertyInfo prop in type.GetProperties(SearchBindingFlags | BindingFlags.GetProperty))
+            {
+                processor(prop, (obj) => prop.GetValue(obj));
+            }
+        }
+
+        protected static Type GetMemberType(MemberInfo memInfo)
+        {
+            switch (memInfo.MemberType)
+            {
+                case MemberTypes.Property:
+                    return (memInfo as PropertyInfo).PropertyType;
+                case MemberTypes.Method:
+                    return (memInfo as MethodInfo).ReturnType;
+                case MemberTypes.Field:
+                    return (memInfo as FieldInfo).FieldType;
+                case MemberTypes.Event:
+                    return (memInfo as EventInfo).EventHandlerType;
+                default:
+                    throw new ArgumentException("The given MemberInfo is not supported.");
+            }
+        }
 
         /// <summary>
         /// Modifies the given object to match the data given in the specified DataRow.
@@ -243,33 +308,37 @@ namespace DataConnector.SQL
                 throw new ArgumentException("The given object does not have the required SqlBackedClassAttribute.");
             }
 
-            foreach (FieldInfo field in targetObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            SetFieldsAndProperties(targetObject.GetType(), (field, setter) =>
             {
                 SqlFieldAttribute sqlFieldAttribute = null;
-				if ((sqlFieldAttribute = Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)) as SqlFieldAttribute) == null)
+                if ((sqlFieldAttribute = Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute)) as SqlFieldAttribute) == null)
                 {
-                    continue;
+                    return;
                 }
 
 
-				// Found a SQL column
-				object dataInstance = data[sqlFieldAttribute.ColumnName ?? field.Name];
+                // Found a SQL column
+                object dataInstance = data[sqlFieldAttribute.ColumnName ?? field.Name];
 
-				ForeignKeyAttribute fkey = null;
-				if ((fkey = Attribute.GetCustomAttribute (field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null) {
-					if (fkey.ForeignType == field.FieldType) {
+                ForeignKeyAttribute fkey = null;
+                if ((fkey = Attribute.GetCustomAttribute(field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null)
+                {
+                    if (fkey.ForeignType == GetMemberType(field))
+                    {
                         // Get the object by ID and use that to set the field
                         // We have to use reflection to invoke a generic method with a type only known at runtime
                         // TODO strongly type the method names
 
                         throw new NotSupportedException("The static InitializeData method does not support object-type foreign keys.");
                         //field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
-					}
-				} else {
-					// Set the field directly
-					field.SetValue(targetObject, dataInstance is DBNull ? null : dataInstance);
-				}
-            }
+                    }
+                }
+                else
+                {
+                    // Set the field directly
+                    setter(targetObject, dataInstance is DBNull ? null : dataInstance);
+                }
+            });
 
             SetObjectInternals(targetObject, targetObject.ID, true);
         }
@@ -292,28 +361,30 @@ namespace DataConnector.SQL
 
             string idColumnName = null;
 
-            foreach (FieldInfo field in targetObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
                 SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
                 if (sqlFieldAttribute == null)
                 {
-                    continue;
+                    // Continue
+                    return;
                 }
                 if (Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) != null)
                 {
+                    // Set ID and handle specially
                     idColumnName = sqlFieldAttribute.ColumnName ?? field.Name;
-                    continue;
+                    return;
                 }
 
                 // Found a non-ID column
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, field.GetValue(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, getter(targetObject));
                 if (sqlFieldAttribute.DataType != default(DbType))
                 {
                     // If the data type is manually specified
                     param.DbType = sqlFieldAttribute.DataType;
                 }
                 parameters.Add(param);
-            }
+            });
 
             // Run the actual insert, returns the inserted record
             DataTable insertedRecords = _database.RunProcedure(dataManagementAttribute.InsertProcedureName, parameters.ToArray());
@@ -349,27 +420,37 @@ namespace DataConnector.SQL
 
             SqlParameter idParameter = null;
 
-            foreach (FieldInfo field in targetObject.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy))
+            GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
+                if (idParameter != null)
+                {
+                    // No need to search
+                    return;
+                }
+
                 SqlFieldAttribute sqlFieldAttribute = (SqlFieldAttribute)Attribute.GetCustomAttribute(field, typeof(SqlFieldAttribute));
                 if (sqlFieldAttribute == null || Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) == null)
                 {
-                    continue;
+                    return;
                 }
 
                 // Found the ID column
                 idParameter = new SqlParameter(sqlFieldAttribute.ColumnName ?? field.Name, targetObject.ID);
-                break; // No need to search further
-            }
+            });
+
+
 
             // Run the actual update
             DataTable results = _database.RunProcedure(dataManagementAttribute.GetByIdProcedureName, idParameter);
 
-			if (results.Rows.Count == 0) {
-				throw new System.Data.RowNotInTableException ("The given ID does not correspond to a record.");
-			} else if (results.Rows.Count > 1) {
-				throw new System.Data.DuplicateNameException ("The given ID is ambiguous.");
-			}
+            if (results.Rows.Count == 0)
+            {
+                throw new System.Data.RowNotInTableException("The given ID does not correspond to a record.");
+            }
+            else if (results.Rows.Count > 1)
+            {
+                throw new System.Data.DuplicateNameException("The given ID is ambiguous.");
+            }
 
             // Update the data in the object
             InitializeData(targetObject, results.Rows[0]);

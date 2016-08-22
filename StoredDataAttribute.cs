@@ -21,6 +21,7 @@ namespace DataConnector
         /// <summary>
         /// Gets or sets the data type to use to store the value in the backend.
         /// If this is unset or null, defaults will be used.
+        /// Handling of this value is backend-dependent.
         /// </summary>
         public System.Data.DbType? DataType { get; set; }
 
