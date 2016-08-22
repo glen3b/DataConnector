@@ -44,7 +44,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlBackedClassAttribute.cs" />
     <Compile Include="SqlDataBackend.cs" />
-    <Compile Include="SqlDataObject.cs" />
     <Compile Include="SqlFieldAttribute.cs" />
     <Compile Include="SqlRelationshipOneToManyAttribute.cs" />
     <Compile Include="SqlSelectAllAttribute.cs" />
