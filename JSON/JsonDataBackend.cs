@@ -254,7 +254,7 @@ namespace DataConnector.JSON
                 }
                 catch (Exception ex)
                 {
-                    throw new RowNotInTableException("The given ID does not correspond to a record.", ex);
+                    throw new IDNotFoundException(id, ex);
                 }
             }
 

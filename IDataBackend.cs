@@ -15,16 +15,16 @@ namespace DataConnector
 		/// <param name="target">The object to save.</param>
         /// <exception cref="System.Data.ReadOnlyException">Thrown if the target object type is read only.</exception>
         void SaveObject(IDataObject target);
-        
-		/// <summary>
-		/// Retrieves an object by its unique database identifier.
-		/// </summary>
-		/// <returns>The object of the given type with the given identifier.</returns>
-		/// <param name="id">The unique identifier of the object.</param>
-		/// <typeparam name="TObject">The type of the object to retrieve.</typeparam>
-		/// <exception cref="System.Data.RowNotInTableException">Thrown if the given ID does not correspond to a record.</exception>
-		/// <exception cref="System.Data.DuplicateNameException">Thrown if the given ID is ambiguous.</exception>
-		TObject GetObjectByID<TObject>(int id) where TObject : IDataObject;
+
+        /// <summary>
+        /// Retrieves an object by its unique database identifier.
+        /// </summary>
+        /// <returns>The object of the given type with the given identifier.</returns>
+        /// <param name="id">The unique identifier of the object.</param>
+        /// <typeparam name="TObject">The type of the object to retrieve.</typeparam>
+        /// <exception cref="IDNotFoundException">Thrown if the given ID does not correspond to a record.</exception>
+        /// <exception cref="System.Data.DuplicateNameException">Thrown if the given ID is ambiguous.</exception>
+        TObject GetObjectByID<TObject>(int id) where TObject : IDataObject;
 
 		/// <summary>
 		/// Retrieves all objects of a given type in the database.

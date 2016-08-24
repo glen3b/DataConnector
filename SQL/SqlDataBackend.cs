@@ -445,7 +445,7 @@ namespace DataConnector.SQL
 
             if (results.Rows.Count == 0)
             {
-                throw new System.Data.RowNotInTableException("The given ID does not correspond to a record.");
+                throw new IDNotFoundException("The given ID does not correspond to a record.");
             }
             else if (results.Rows.Count > 1)
             {
