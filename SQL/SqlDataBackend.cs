@@ -231,7 +231,7 @@ namespace DataConnector.SQL
                     // Continue
                     return;
                 }
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
                 if (sqlFieldAttribute.DataType.HasValue)
                 {
                     // If the data type is manually specified
@@ -377,7 +377,7 @@ namespace DataConnector.SQL
                 }
 
                 // Found a non-ID column
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject));
+                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
                 if (sqlFieldAttribute.DataType.HasValue)
                 {
                     // If the data type is manually specified
