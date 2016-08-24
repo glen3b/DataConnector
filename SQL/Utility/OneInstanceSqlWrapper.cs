@@ -10,10 +10,7 @@ namespace DataConnector.SQL.Utility
 {
     public sealed class OneInstanceSqlWrapper : SqlWrapper
     {
-        public OneInstanceSqlWrapper(string connString) : base(connString) {
-            _connection = new SqlConnection(connString);
-            _info = new SqlConnectionInformation(_connection, SqlConnectionBehavior.KeepOpen);
-        }
+        public OneInstanceSqlWrapper(string connString) : base(connString) { }
 
         public override void Dispose()
         {
@@ -39,11 +36,11 @@ namespace DataConnector.SQL.Utility
 
         public override SqlConnectionInformation GetConnection()
         {
-            //if (_connection == null)
-            //{
-            //    _connection = new SqlConnection(ConnectionString);
-            //    _info = new SqlConnectionInformation(_connection, SqlConnectionBehavior.KeepOpen);
-            //}
+            if (_connection == null)
+            {
+                _connection = new SqlConnection(ConnectionString);
+                _info = new SqlConnectionInformation(_connection, SqlConnectionBehavior.KeepOpen);
+            }
 
             return _info;
         }
