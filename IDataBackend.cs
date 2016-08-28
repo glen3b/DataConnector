@@ -13,7 +13,7 @@ namespace DataConnector
         /// This will occur most often in inserts.
 		/// </summary>
 		/// <param name="target">The object to save.</param>
-        /// <exception cref="System.Data.ReadOnlyException">Thrown if the target object type is read only.</exception>
+        /// <exception cref="System.Data.ReadOnlyException">Thrown if the target object type or backend is read only.</exception>
         void SaveObject(IDataObject target);
 
         /// <summary>

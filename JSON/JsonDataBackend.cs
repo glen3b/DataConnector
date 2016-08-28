@@ -16,14 +16,27 @@ namespace DataConnector.JSON
     public class JsonDataBackend : IDataBackend
     {
         /// <summary>
+        /// A delegate type that creates streams on demand. The streams should support both reading and writing if possible.
+        /// </summary>
+        /// <returns>A new stream.</returns>
+        public delegate Stream StreamCreator();
+
+        /// <summary>
         /// Gets the path of the backend file.
         /// </summary>
         /// <value>The backend file path.</value>
+        [Obsolete("Please use the StreamCreator property instead.")]
         public string FilePath
         {
             get;
             private set;
         }
+
+        /// <summary>
+        /// Gets the delegate which is used to initialize streams for reading from and writing to the backend.
+        /// If the returned streams do not support writing, it will be assumed that the backend is read only.
+        /// </summary>
+        public StreamCreator StreamInitializer { get; private set; }
 
         /// <summary>
         /// Gets a collection of assemblies from which loading of user types should be attempted.
@@ -32,14 +45,14 @@ namespace DataConnector.JSON
 
         protected readonly JsonSerializer Serializer;
 
-        public JsonDataBackend(string filePath)
+        public JsonDataBackend(StreamCreator streamCreator)
         {
-            if (filePath == null)
+            if (streamCreator == null)
             {
-                throw new ArgumentNullException("filePath");
+                throw new ArgumentNullException(nameof(streamCreator));
             }
 
-            FilePath = filePath;
+            StreamInitializer = streamCreator;
 
             Serializer = new JsonSerializer();
             Serializer.ContractResolver = new JsonDataObjectContractResolver();
@@ -48,6 +61,16 @@ namespace DataConnector.JSON
                 typeof(JsonDataBackend).Assembly
             });
             // Serializer.Converters.Add (new DataObjectJsonConverter (this));
+        }
+
+        public JsonDataBackend(string filePath) : this(() => File.Open(filePath, FileMode.OpenOrCreate))
+        {
+            if (filePath == null)
+            {
+                throw new ArgumentNullException(nameof(filePath));
+            }
+
+            FilePath = filePath;
         }
 
         /// <summary>
@@ -173,8 +196,13 @@ namespace DataConnector.JSON
 
         protected void SaveToBackend()
         {
-            using (FileStream stream = File.Open(FilePath, FileMode.Create))
+            using (Stream stream = StreamInitializer())
             {
+                if (!stream.CanWrite)
+                {
+                    throw new ReadOnlyException("This backend does not support writing.");
+                }
+
                 using (StreamWriter writer = new StreamWriter(stream))
                 {
                     Serializer.Serialize(writer, AllObjects);
@@ -184,7 +212,7 @@ namespace DataConnector.JSON
 
         protected void LoadBackend()
         {
-            using (FileStream stream = File.Open(FilePath, FileMode.OpenOrCreate))
+            using (Stream stream = StreamInitializer())
             {
                 using (StreamReader srdr = new StreamReader(stream))
                 {
