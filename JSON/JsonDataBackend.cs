@@ -62,7 +62,11 @@ namespace DataConnector.JSON
             });
             // Serializer.Converters.Add (new DataObjectJsonConverter (this));
         }
-
+        
+        /// <summary>
+        /// Creates a JSON data backend backed by a file.
+        /// </summary>
+        /// <param name="filePath">The path to the backend file.</param>
         public JsonDataBackend(string filePath) : this(() => File.Open(filePath, FileMode.OpenOrCreate))
         {
             if (filePath == null)
@@ -70,44 +74,10 @@ namespace DataConnector.JSON
                 throw new ArgumentNullException(nameof(filePath));
             }
 
+            // Still set the file path while the property exists - just remove this line when we kill the property
+#pragma warning disable CS0618
             FilePath = filePath;
-        }
-
-        /// <summary>
-        /// A contract resolver that selects fields in an opt-in mode.
-        /// </summary>
-        class JsonDataObjectContractResolver : DefaultContractResolver
-        {
-            public JsonDataObjectContractResolver()
-            {
-            }
-
-            protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-            {
-                // TODO this is a bit hacky
-
-                const BindingFlags searchFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
-
-                var props = (from MemberInfo mem in type.GetFields(searchFlags) select mem)
-                    .Union(from MemberInfo mem in type.GetProperties(searchFlags) select mem)
-                    .Where(mem => Attribute.GetCustomAttribute(mem, typeof(StoredDataAttribute)) != null)
-                    .Select(mem =>
-                    {
-                        JsonProperty prop = CreateProperty(mem, memberSerialization);
-                        string custName = (Attribute.GetCustomAttribute(mem, typeof(StoredDataAttribute)) as StoredDataAttribute)?.StoredName;
-                        if (custName != null)
-                        {
-                            prop.PropertyName = custName;
-                        }
-
-                        prop.Readable = true;
-                        prop.Writable = true;
-
-                        return prop;
-                    }).ToList();
-
-                return props;
-            }
+#pragma warning restore CS0618
         }
 
         //		class DataObjectJsonConverter : JsonConverter
