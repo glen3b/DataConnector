@@ -22,6 +22,11 @@ namespace DataConnector.JSON
 
         protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
         {
+            if (!typeof(IDataObject).IsAssignableFrom(type))
+            {
+                return base.CreateProperties(type, memberSerialization);
+            }
+
             // TODO this is a bit hacky
 
             const BindingFlags searchFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
