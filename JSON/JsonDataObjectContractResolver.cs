@@ -44,7 +44,7 @@ namespace DataConnector.JSON
                     }
 
                     prop.Readable = true;
-                    prop.Writable = true;
+                    prop.Writable = mem.GetCustomAttribute<DataPropertyAttribute>() == null;
 
                     return prop;
                 }).ToList();

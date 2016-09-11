@@ -231,6 +231,14 @@ namespace DataConnector.SQL
                     // Continue
                     return;
                 }
+
+                // Don't write read-only properties
+                if(field.GetCustomAttribute<DataPropertyAttribute>() != null)
+                {
+                    // Continue
+                    return;
+                }
+
                 SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
                 if (sqlFieldAttribute.DataType.HasValue)
                 {
@@ -369,6 +377,13 @@ namespace DataConnector.SQL
                     // Continue
                     return;
                 }
+
+                if (field.GetCustomAttribute<DataPropertyAttribute>() != null)
+                {
+                    // Continue
+                    return;
+                }
+
                 if (Attribute.GetCustomAttribute(field, typeof(PrimaryKeyAttribute)) != null)
                 {
                     // Set ID and handle specially
