@@ -2,7 +2,7 @@
 
 namespace DataConnector
 {
-	[AttributeUsage (AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Field | AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
 	public sealed class ForeignKeyAttribute : Attribute
 	{
 		readonly Type targetTable;

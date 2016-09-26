@@ -294,6 +294,21 @@ namespace DataConnector.JSON
                     }
                 }
 
+                // TODO don't duplicate this loop
+                foreach (var mem in c.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+                {
+                    ForeignKeyAttribute fkey;
+                    if ((fkey = ((ForeignKeyAttribute)Attribute.GetCustomAttribute(mem, typeof(ForeignKeyAttribute)))) != null)
+                    {
+                        if (fkey.ForeignType == typeof(TParentObject))
+                        {
+                            var fkeyValue = mem.GetValue(c);
+                            // Match foreign key relations
+                            return parentId.Equals(fkeyValue);
+                        }
+                    }
+                }
+
                 // No foreign key relation found
                 // Do not include in return
                 return false;
