@@ -52,11 +52,23 @@ namespace DataConnector.SQL
             where TParentObject : IDataObject
             where TChildObject : IDataObject
         {
-            SqlRelationshipOneToManyAttribute parentAttribute = Attribute.GetCustomAttribute(typeof(TParentObject), typeof(SqlRelationshipOneToManyAttribute)) as SqlRelationshipOneToManyAttribute;
+            var parentAttrs = typeof(TParentObject).GetCustomAttributes<SqlRelationshipOneToManyAttribute>(true);
+
+            SqlRelationshipOneToManyAttribute parentAttribute = null;
+
+            foreach(var attr in parentAttrs)
+            {
+                if(attr.ChildType == typeof(TChildObject))
+                {
+                    parentAttribute = attr;
+                    break;
+                }
+            }
+
             if (parentAttribute == null)
             {
                 // Per interface spec
-                throw new NotSupportedException("The given parent type does not have a child type.");
+                throw new NotSupportedException("The given parent type does not have the given child type.");
             }
 
             if (parentAttribute.GetChildrenProcedure == null)

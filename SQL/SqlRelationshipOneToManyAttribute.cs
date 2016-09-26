@@ -2,7 +2,7 @@
 
 namespace DataConnector.SQL
 {
-	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
+	[AttributeUsage (AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = true)]
 	public sealed class SqlRelationshipOneToManyAttribute : Attribute
 	{
 		readonly Type childType;
