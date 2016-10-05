@@ -56,9 +56,9 @@ namespace DataConnector.SQL
 
             SqlRelationshipOneToManyAttribute parentAttribute = null;
 
-            foreach(var attr in parentAttrs)
+            foreach (var attr in parentAttrs)
             {
-                if(attr.ChildType == typeof(TChildObject))
+                if (attr.ChildType == typeof(TChildObject))
                 {
                     parentAttribute = attr;
                     break;
@@ -245,7 +245,7 @@ namespace DataConnector.SQL
                 }
 
                 // Don't write read-only properties
-                if(field.GetCustomAttribute<DataPropertyAttribute>() != null)
+                if (field.GetCustomAttribute<DataPropertyAttribute>() != null)
                 {
                     // Continue
                     return;
@@ -341,17 +341,14 @@ namespace DataConnector.SQL
                 object dataInstance = data[sqlFieldAttribute.StoredName ?? field.Name];
 
                 ForeignKeyAttribute fkey = null;
-                if ((fkey = Attribute.GetCustomAttribute(field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null)
+                if ((fkey = Attribute.GetCustomAttribute(field, typeof(ForeignKeyAttribute)) as ForeignKeyAttribute) != null && fkey.ForeignType == GetMemberType(field))
                 {
-                    if (fkey.ForeignType == GetMemberType(field))
-                    {
-                        // Get the object by ID and use that to set the field
-                        // We have to use reflection to invoke a generic method with a type only known at runtime
-                        // TODO strongly type the method names
+                    // Get the object by ID and use that to set the field
+                    // We have to use reflection to invoke a generic method with a type only known at runtime
+                    // TODO strongly type the method names
 
-                        throw new NotSupportedException("The static InitializeData method does not support object-type foreign keys.");
-                        //field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
-                    }
+                    throw new NotSupportedException("The static InitializeData method does not support object-type foreign keys.");
+                    //field.SetValue(targetObject, this.GetType().GetMethod("GetObjectByID").MakeGenericMethod(fkey.ForeignType).Invoke(this, new object[]{dataInstance}));
                 }
                 else
                 {
