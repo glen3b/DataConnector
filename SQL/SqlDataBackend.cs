@@ -2,7 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using System.Data.Common;
+// using System.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -10,14 +11,15 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL
 {
+    // TODO rename to DatabaseBackend or similar
     public class SqlDataBackend : IDataBackend
     {
-        private ISqlWrapper _database;
+        private IDbWrapper _database;
 
         /// <summary>
         /// Gets the database wrapper in use by this data backend.
         /// </summary>
-        public ISqlWrapper Database
+        public IDbWrapper Database
         {
             get
             {
@@ -30,7 +32,7 @@ namespace DataConnector.SQL
         /// </summary>
         public static readonly BindingFlags SearchBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
 
-        public SqlDataBackend(ISqlWrapper databaseWrapper)
+        public SqlDataBackend(IDbWrapper databaseWrapper)
         {
             if (databaseWrapper == null)
             {
@@ -111,7 +113,7 @@ namespace DataConnector.SQL
                 throw new NotSupportedException("The correct foreign key was not found in the child type.");
             }
 
-            foreach (DataRow row in _database.RunProcedure(parentAttribute.GetChildrenProcedure, new SqlParameter(foreignKeyName, parentId)).Rows)
+            foreach (DataRow row in _database.RunProcedure(parentAttribute.GetChildrenProcedure, new ProcedureParameter(foreignKeyName, parentId)).Rows)
             {
                 TChildObject child = Activator.CreateInstance<TChildObject>();
                 InitializeData(child, row);
@@ -233,7 +235,7 @@ namespace DataConnector.SQL
                 throw new ArgumentException("The given object does not have the required SqlBackedClassAttribute.");
             }
 
-            List<SqlParameter> parameters = new List<SqlParameter>();
+            List<ProcedureParameter> parameters = new List<ProcedureParameter>();
 
             GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
@@ -251,12 +253,12 @@ namespace DataConnector.SQL
                     return;
                 }
 
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
-                if (sqlFieldAttribute.DataType.HasValue)
-                {
-                    // If the data type is manually specified
-                    param.DbType = sqlFieldAttribute.DataType.Value;
-                }
+                ProcedureParameter param = new ProcedureParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
+                //if (sqlFieldAttribute.DataType.HasValue)
+                //{
+                //    // If the data type is manually specified
+                //    param.DbType = sqlFieldAttribute.DataType.Value;
+                //}
                 parameters.Add(param);
             });
 
@@ -374,7 +376,7 @@ namespace DataConnector.SQL
                 throw new ArgumentException("The given object does not have the required SqlBackedClassAttribute.");
             }
 
-            List<SqlParameter> parameters = new List<SqlParameter>();
+            List<ProcedureParameter> parameters = new List<ProcedureParameter>();
 
             string idColumnName = null;
 
@@ -401,12 +403,12 @@ namespace DataConnector.SQL
                 }
 
                 // Found a non-ID column
-                SqlParameter param = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
-                if (sqlFieldAttribute.DataType.HasValue)
-                {
-                    // If the data type is manually specified
-                    param.DbType = sqlFieldAttribute.DataType.Value;
-                }
+                ProcedureParameter param = new ProcedureParameter(sqlFieldAttribute.StoredName ?? field.Name, getter(targetObject) ?? DBNull.Value);
+                //if (sqlFieldAttribute.DataType.HasValue)
+                //{
+                //    // If the data type is manually specified
+                //    param.DbType = sqlFieldAttribute.DataType.Value;
+                //}
                 parameters.Add(param);
             });
 
@@ -442,13 +444,14 @@ namespace DataConnector.SQL
                 throw new ArgumentException("The given object does not have the required SqlBackedClassAttribute.");
             }
 
-            SqlParameter idParameter = null;
+            // TODO this is ugly
+            ProcedureParameter idParameter = default(ProcedureParameter);
 
             GetFieldsAndProperties(targetObject.GetType(), (field, getter) =>
             {
-                if (idParameter != null)
+                if(idParameter.Name != null)
                 {
-                    // No need to search
+                    // No need to search further
                     return;
                 }
 
@@ -459,11 +462,9 @@ namespace DataConnector.SQL
                 }
 
                 // Found the ID column
-                idParameter = new SqlParameter(sqlFieldAttribute.StoredName ?? field.Name, targetObject.ID);
+                idParameter = new ProcedureParameter(sqlFieldAttribute.StoredName ?? field.Name, targetObject.ID);
             });
-
-
-
+            
             // Run the actual update
             DataTable results = _database.RunProcedure(dataManagementAttribute.GetByIdProcedureName, idParameter);
 

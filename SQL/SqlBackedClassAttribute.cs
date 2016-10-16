@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL
 {
+    // TODO have this attribute just specify a table name (if direct-to-table) and use different annotations for CRU(D)
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false, AllowMultiple = false)]
     public sealed class SqlBackedClassAttribute : Attribute
     {

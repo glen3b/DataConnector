@@ -23,6 +23,7 @@ namespace DataConnector
         /// If this is unset or null, defaults will be used.
         /// Handling of this value is backend-dependent.
         /// </summary>
+        [Obsolete("This value is not treated consistently and is often ignored.")]
         public System.Data.DbType? DataType { get; set; }
 
         public StoredDataAttribute()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DataConnector.SQL.Utility
 {
-    public abstract class SqlWrapper : IDisposable, ISqlWrapper
+    public abstract class SqlWrapper : IDisposable, IDbWrapper
     {
         public SqlWrapper(string connString)
         {
@@ -17,7 +18,7 @@ namespace DataConnector.SQL.Utility
 
         protected string ConnectionString;
 
-        public DataTable RunProcedure(string procedureName, params SqlParameter[] parameters)
+        public DataTable RunProcedure(string procedureName, params ProcedureParameter[] parameters)
         {
             var connInfo = GetConnection();
 
@@ -28,7 +29,7 @@ namespace DataConnector.SQL.Utility
 
             SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddRange(parameters);
+            command.Parameters.AddParameters(parameters);
             SqlDataAdapter adapter = new SqlDataAdapter(command);
             DataTable table = new DataTable();
             adapter.Fill(table);
@@ -41,7 +42,7 @@ namespace DataConnector.SQL.Utility
             return table;
         }
 
-        public int RunNonQueryProcedure(string procedureName, params SqlParameter[] parameters)
+        public int RunNonQueryProcedure(string procedureName, params ProcedureParameter[] parameters)
         {
             var connInfo = GetConnection();
 
@@ -52,7 +53,7 @@ namespace DataConnector.SQL.Utility
 
             SqlCommand command = new SqlCommand(procedureName, connInfo.Connection);
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.AddRange(parameters);
+            command.Parameters.AddParameters(parameters);
             var res = command.ExecuteNonQuery();
 
             if (!connInfo.Behavior.HasFlag(SqlConnectionBehavior.KeepOpen))
